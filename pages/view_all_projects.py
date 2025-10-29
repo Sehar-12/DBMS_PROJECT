@@ -21,10 +21,14 @@ for p in projects:
     st.subheader(p["title"])
     st.write(f"**Domain:** {p['domain']}")
     st.write(f"**Uploaded by:** {p['uploaded_by']}")
-    st.page_link("pages/project_details_page.py",
-                 label="View Details", icon="🔍")
+
+    # ✅ Replace page_link with a button that sets session state
+    if st.button(f"🔍 View Details - {p['title']}", key=f"view_{p['project_id']}"):
+        st.session_state["selected_project_id"] = p["project_id"]
+        st.switch_page("pages/project_details_page.py")  # ✅ redirect manually
+
     if p["uploaded_by"] == st.session_state.username:
-        if st.button(f"🗑️ Delete {p['title']}"):
+        if st.button(f"🗑️ Delete {p['title']}", key=f"delete_{p['project_id']}"):
             run_query("CALL DeleteProject(%s)", (p["project_id"],))
             st.warning(f"Deleted '{p['title']}'")
     st.divider()
