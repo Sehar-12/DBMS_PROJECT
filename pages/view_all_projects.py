@@ -10,7 +10,13 @@ if "logged_in" not in st.session_state or not st.session_state.logged_in:
 
 search = st.text_input("🔍 Search Projects")
 
-query = "SELECT p.project_id, p.title, p.domain, s.name AS uploaded_by FROM project p JOIN student s ON p.student_id = s.student_id"
+# Include comment_count in query
+query = """
+SELECT p.project_id, p.title, p.domain, s.name AS uploaded_by, p.comment_count
+FROM project p 
+JOIN student s ON p.student_id = s.student_id
+"""
+
 if search:
     query += " WHERE p.title LIKE %s"
     projects = run_query(query, (f"%{search}%",), fetch=True)
@@ -21,14 +27,17 @@ for p in projects:
     st.subheader(p["title"])
     st.write(f"**Domain:** {p['domain']}")
     st.write(f"**Uploaded by:** {p['uploaded_by']}")
+    # trigger-controlled
+    st.write(f"💬 **Comments:** {p.get('comment_count', 0)}")
 
-    # ✅ Replace page_link with a button that sets session state
+    # ✅ Button to view details
     if st.button(f"🔍 View Details - {p['title']}", key=f"view_{p['project_id']}"):
         st.session_state["selected_project_id"] = p["project_id"]
-        st.switch_page("pages/project_details_page.py")  # ✅ redirect manually
+        st.switch_page("pages/project_details_page.py")
 
+    # ✅ Delete Project (fires trg_project_delete)
     if p["uploaded_by"] == st.session_state.username:
         if st.button(f"🗑️ Delete {p['title']}", key=f"delete_{p['project_id']}"):
             run_query("CALL DeleteProject(%s)", (p["project_id"],))
-            st.warning(f"Deleted '{p['title']}'")
+            st.warning(f"Deleted '{p['title']}' — logged in audit table.")
     st.divider()
