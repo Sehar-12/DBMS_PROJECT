@@ -12,9 +12,18 @@ search = st.text_input("🔍 Search Projects")
 
 # Include comment_count in query
 query = """
-SELECT p.project_id, p.title, p.domain, s.name AS uploaded_by, p.comment_count
-FROM project p 
+SELECT 
+    p.project_id,
+    p.title,
+    p.domain,
+    s.name AS uploaded_by,
+    -- Nested query to count comments dynamically
+    (SELECT COUNT(*) 
+     FROM comments c 
+     WHERE c.project_id = p.project_id) AS comment_count
+FROM project p
 JOIN student s ON p.student_id = s.student_id
+
 """
 
 if search:
